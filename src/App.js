@@ -39,7 +39,8 @@ class Pinball extends Component {
         const width = this.props.gameWidth + (this.props.borderSize * 2)
         const height = this.props.gameHeight + (this.props.borderSize * 2)
         this.canvasContext = this.canvasRef.current.getContext("2d")
-        this.canvasContext.clearRect(0, 0, width, height);
+        this.canvasContext.fillStyle = 'black'
+        this.canvasContext.fillRect(0,0, width, height);
         this.flashCanvasContext = this.flashCanvasRef.current.getContext("2d")
         this.flashCanvasContext.clearRect(0, 0, width, height);
         this.tipCanvasContext = this.tipCanvasRef.current.getContext("2d")
@@ -52,9 +53,9 @@ class Pinball extends Component {
         this.fadeFrames += 1
         const width = this.props.gameWidth + (this.props.borderSize * 2)
         const height = this.props.gameHeight + (this.props.borderSize * 2)
-        if (this.fadeFrames % 30 === 0) {
+        if (this.fadeFrames % 60 === 0) {
             const ctx = this.canvasContext
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.02)'
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.005)'
             ctx.fillRect(0, 0, width, height)
             ctx.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
         }
@@ -79,11 +80,11 @@ class Pinball extends Component {
             prevPrevScore = 0
         }
         const angleOffset = 42.46
-        const prevAngle = degreesToRadians(((((prevScore % pointsPerMultiplier) / pointsPerMultiplier) * 360) - 0.25) + angleOffset)
+        const prevAngle = degreesToRadians(((((prevScore % pointsPerMultiplier) / pointsPerMultiplier) * 360) - 0.5) + angleOffset)
         const prevAngle2 = degreesToRadians(((((prevScore % pointsPerMultiplier) / pointsPerMultiplier) * 360)) + angleOffset)
-        const prevPrevAngle = degreesToRadians(((((prevPrevScore % pointsPerMultiplier) / pointsPerMultiplier) * 360) - 0.25) + angleOffset)
+        const prevPrevAngle = degreesToRadians(((((prevPrevScore % pointsPerMultiplier) / pointsPerMultiplier) * 360) - 0.5) + angleOffset)
         const angle = degreesToRadians((((score % pointsPerMultiplier) / pointsPerMultiplier) * 360) + angleOffset)
-        const angle2 = degreesToRadians(((((score % pointsPerMultiplier) / pointsPerMultiplier) * 360) + 0.25) + angleOffset)
+        const angle2 = degreesToRadians(((((score % pointsPerMultiplier) / pointsPerMultiplier) * 360) + 0.5) + angleOffset)
         const ctx = this.canvasContext
         let hue = (this.state.updateNumber * 36) % 360
         //hue = (hue + ((360 / 3) * (this.state.updateNumber % 3))) % 360
@@ -139,7 +140,8 @@ class Pinball extends Component {
         if (score === 0) {
             flashCtx.clearRect(0, 0, width, height)
             tipCtx.clearRect(0, 0, width, height)
-            ctx.clearRect(0, 0, width, height)
+            ctx.fillStyle = 'black'
+            ctx.fillRect(0,0, width, height)
         } else {
             flashCtx.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
             tipCtx.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
@@ -225,23 +227,31 @@ async function get(url) {
 }
 
 async function getEmuPort() {
-    const response = await get('/pinball/emu-api-port');
+    let url = '/pinball/emu-api-port'
+    //url = 'http://localhost:5000' + url
+    const response = await get(url);
     const text = await response.text();
     return parseInt(text);
 }
 
 async function getPinballTable() {
-    const response = await get('/pinball/current-table');
+    let url = '/pinball/current-table'
+    //url = 'http://localhost:5000' + url
+    const response = await get(url);
     return await response.text();
 }
 
 async function getPinballMultipliers() {
-    const response = await get('/pinball/multipliers');
+    let url = '/pinball/multipliers'
+    //url = 'http://localhost:5000' + url
+    const response = await get(url);
     return response.json();
 }
 
 async function getPinballScore(emuPort) {
-    const response = await get(`/emu/${emuPort}/WRAM/ReadU32LE/146A`);
+    const url = `/emu/${emuPort}/WRAM/ReadU32LE/146A`
+    //const url = `http://localhost:${emuPort}/WRAM/ReadU32LE/146A`
+    const response = await get(url);
     const text = await response.text();
     return parseInt(text + '0');
 }
