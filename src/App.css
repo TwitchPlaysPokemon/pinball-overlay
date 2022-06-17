@@ -1,0 +1,38 @@
+body {
+  background: transparent;
+  color: white;
+  text-align: left;
+}
+canvas {
+  position: absolute;
+}
+.placeholder {
+  position: absolute;
+  opacity: 0.5;
+}
+.Pinball {
+  position: relative;
+}
+.multiplier {
+  position: absolute;
+}
+
+@keyframes multiplier-flash {
+  from {
+    filter: contrast(50%) brightness(500%);
+  }
+  to {
+    filter: contrast(100%) brightness(500%);
+  }
+}
+
+.multiplier {
+  animation: multiplier-flash 1.6s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.multiplier img {
+  width: calc(8px * var(--scale));
+  height: calc(15px * var(--scale));
+  image-rendering: pixelated;
+  vertical-align: top;
+}
