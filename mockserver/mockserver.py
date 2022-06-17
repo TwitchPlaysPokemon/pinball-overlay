@@ -60,8 +60,11 @@ def main():
     global SCORE
     time.sleep(2)
     while True:
-        time.sleep(random.random() / 2)
-        SCORE += 2000
+        time.sleep(random.random() * 5)
+        if random.randrange(2) == 1:
+            SCORE += 2000
+        else:
+            SCORE += 50
 
 
 if __name__ == '__main__':
