@@ -26,25 +26,23 @@ function degreesToRadians(degrees) {
 class Pinball extends Component {
     constructor(props) {
         super(props)
-        this.state = { prevScore: 0, updateNumber: 0, prevPrevScore: 0 }
+        this.state = { prevScore: 0, updateNumber: 0, color: 0 }
         this.canvasRef = React.createRef()
         this.canvasContext = null
         this.flashCanvasRef = React.createRef()
         this.flashCanvasContext = null
-        this.tipCanvasRef = React.createRef()
-        this.tipCanvasContext = null
+        this.bgCanvasRef = React.createRef()
+        this.bgCanvasContext = null
         this.fadeFrames = 0
     }
     componentDidMount() {
         const width = this.props.gameWidth + (this.props.borderSize * 2)
         const height = this.props.gameHeight + (this.props.borderSize * 2)
         this.canvasContext = this.canvasRef.current.getContext("2d")
-        this.canvasContext.fillStyle = 'black'
-        this.canvasContext.fillRect(0,0, width, height);
         this.flashCanvasContext = this.flashCanvasRef.current.getContext("2d")
         this.flashCanvasContext.clearRect(0, 0, width, height);
-        this.tipCanvasContext = this.tipCanvasRef.current.getContext("2d")
-        this.tipCanvasContext.clearRect(0, 0, width, height);
+        this.bgCanvasContext = this.bgCanvasRef.current.getContext("2d")
+        this.bgCanvasContext.clearRect(0, 0, width, height);
         this.fadeFlashLayer = this.fadeFlashLayer.bind(this)
         window.requestAnimationFrame(this.fadeFlashLayer)
     }
@@ -53,12 +51,6 @@ class Pinball extends Component {
         this.fadeFrames += 1
         const width = this.props.gameWidth + (this.props.borderSize * 2)
         const height = this.props.gameHeight + (this.props.borderSize * 2)
-        if (this.fadeFrames % 60 === 0) {
-            const ctx = this.canvasContext
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.005)'
-            ctx.fillRect(0, 0, width, height)
-            ctx.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
-        }
         if (this.fadeFrames % 2 === 0) {
             const flashCtx = this.flashCanvasContext
             flashCtx.globalCompositeOperation = 'destination-out'
@@ -72,26 +64,75 @@ class Pinball extends Component {
     componentDidUpdate(prevProps, prevState, snapshot) {
         const score = this.props.score
         let prevScore = this.state.prevScore
-        let prevPrevScore = this.state.prevPrevScore
         const pointsPerMultiplier = this.props.pointsPerMultiplier
+        const flashCtx = this.flashCanvasContext
         if (score === prevScore) return
         if (score === 0) {
             prevScore = 0
-            prevPrevScore = 0
         }
-        const angleOffset = 42.46
-        const prevAngle = degreesToRadians(((((prevScore % pointsPerMultiplier) / pointsPerMultiplier) * 360) - 0.5) + angleOffset)
-        const prevAngle2 = degreesToRadians(((((prevScore % pointsPerMultiplier) / pointsPerMultiplier) * 360)) + angleOffset)
-        const prevPrevAngle = degreesToRadians(((((prevPrevScore % pointsPerMultiplier) / pointsPerMultiplier) * 360) - 0.5) + angleOffset)
-        const angle = degreesToRadians((((score % pointsPerMultiplier) / pointsPerMultiplier) * 360) + angleOffset)
-        const angle2 = degreesToRadians(((((score % pointsPerMultiplier) / pointsPerMultiplier) * 360) + 0.5) + angleOffset)
+        const angleOffset = 42
+        const prevDegrees = ((((prevScore % pointsPerMultiplier) / pointsPerMultiplier) * 360) - 0.15) + angleOffset
+        const prevAngle = degreesToRadians(prevDegrees)
+        const degrees = (((score % pointsPerMultiplier) / pointsPerMultiplier) * 360) + angleOffset
+        const angle = degreesToRadians(degrees)
+        const degreesDiff = ((score - prevScore) / pointsPerMultiplier) * 360
         const ctx = this.canvasContext
-        let hue = (this.state.updateNumber * 36) % 360
-        //hue = (hue + ((360 / 3) * (this.state.updateNumber % 3))) % 360
-        ctx.fillStyle = `hsl(${hue}, 100%, 50%)`
-        //ctx.fillRect(0, 0, this.props.borderSize, this.props.borderSize)
+        //let hue = (this.state.updateNumber * 36) % 360
+        let color = this.state.color
+        if(degreesDiff > 2) {
+            color += 1
+            const hue = (color * 36) % 360
+            ctx.fillStyle = `hsl(${hue}, 100%, 50%)`
+        } else {
+            ctx.fillStyle = 'white'
+        }
         const width = this.props.gameWidth + (this.props.borderSize * 2)
         const height = this.props.gameHeight + (this.props.borderSize * 2)
+
+        const a = degrees - angleOffset
+        const b = prevDegrees - angleOffset
+        if(a < b) {
+            this.drawWedge(degreesToRadians(angleOffset), prevAngle)
+            console.log('divide')
+            flashCtx.fillRect(0, 0, width, height)
+            ctx.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
+            const bgCtx = this.bgCanvasContext
+            bgCtx.drawImage(this.canvasContext.canvas, 0, 0)
+            bgCtx.fillStyle = 'rgba(0, 0, 0, 0.85)'
+            bgCtx.fillRect(0, 0, width, height)
+            this.canvasContext.clearRect(0, 0, width, height)
+            this.drawWedge(angle, degreesToRadians(angleOffset))
+        } else {
+            this.drawWedge(angle, prevAngle)
+        }
+
+
+        // clear when score is 0
+        if (score === 0) {
+            flashCtx.clearRect(0, 0, width, height)
+            ctx.fillStyle = 'black'
+            ctx.fillRect(0,0, width, height)
+        } else {
+            flashCtx.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
+            ctx.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
+        }
+
+        // multiplier tick over
+        //const prevMultiplier = Math.floor(this.state.prevScore / this.props.pointsPerMultiplier)
+        //const multiplier = Math.floor(this.props.score / this.props.pointsPerMultiplier)
+
+        this.setState({
+            prevScore: score,
+            color: color,
+            updateNumber: this.state.updateNumber + 1
+        })
+    }
+
+    drawWedge(angle, prevAngle) {
+        const width = this.props.gameWidth + (this.props.borderSize * 2)
+        const height = this.props.gameHeight + (this.props.borderSize * 2)
+        const ctx = this.canvasContext
+        ctx.globalCompositeOperation = 'destination-over'
         ctx.beginPath()
         ctx.moveTo(width / 2, height / 2)
         ctx.lineTo(
@@ -102,57 +143,19 @@ class Pinball extends Component {
             (height / 2) + (Math.sin(angle) * 400))
         ctx.closePath()
         ctx.fill()
-        const tipCtx = this.tipCanvasContext
-        tipCtx.clearRect(0, 0, width, height)
-        tipCtx.fillStyle = 'white'
-        tipCtx.beginPath()
-        tipCtx.moveTo(width / 2, height / 2)
-        tipCtx.lineTo(
-            (width / 2) + (Math.cos(prevAngle) * 400),
-            (height / 2) + (Math.sin(prevAngle) * 400))
-        tipCtx.lineTo(
-            (width / 2) + (Math.cos(angle2) * 400),
-            (height / 2) + (Math.sin(angle2) * 400))
-        tipCtx.closePath()
-        tipCtx.fill()
         const flashCtx = this.flashCanvasContext
         flashCtx.fillStyle = 'white'
         flashCtx.globalCompositeOperation = 'source-over'
         flashCtx.beginPath()
         flashCtx.moveTo(width / 2, height / 2)
         flashCtx.lineTo(
-            (width / 2) + (Math.cos(prevPrevAngle) * 400),
-            (height / 2) + (Math.sin(prevPrevAngle) * 400))
+            (width / 2) + (Math.cos(angle) * 400),
+            (height / 2) + (Math.sin(angle) * 400))
         flashCtx.lineTo(
-            (width / 2) + (Math.cos(prevAngle2) * 400),
-            (height / 2) + (Math.sin(prevAngle2) * 400))
+            (width / 2) + (Math.cos(prevAngle) * 400),
+            (height / 2) + (Math.sin(prevAngle) * 400))
         flashCtx.closePath()
         flashCtx.fill()
-
-        // multiplier tick over
-        const prevMultiplier = Math.floor(this.state.prevScore / this.props.pointsPerMultiplier)
-        const multiplier = Math.floor(this.props.score / this.props.pointsPerMultiplier)
-        if (multiplier > prevMultiplier) {
-            flashCtx.fillRect(0, 0, width, height)
-        }
-
-        // clear when score is 0
-        if (score === 0) {
-            flashCtx.clearRect(0, 0, width, height)
-            tipCtx.clearRect(0, 0, width, height)
-            ctx.fillStyle = 'black'
-            ctx.fillRect(0,0, width, height)
-        } else {
-            flashCtx.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
-            tipCtx.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
-            ctx.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
-        }
-
-        this.setState({
-            prevScore: score,
-            prevPrevScore: prevScore,
-            updateNumber: this.state.updateNumber + 1
-        })
     }
 
     render() {
@@ -188,17 +191,17 @@ class Pinball extends Component {
         return (
             <div className="Pinball" style={{ width: width, height: height }}>
                 <canvas
+                    ref={this.bgCanvasRef}
+                    width={width}
+                    height={height}
+                />
+                <canvas
                     ref={this.canvasRef}
                     width={width}
                     height={height}
                 />
                 <canvas
                     ref={this.flashCanvasRef}
-                    width={width}
-                    height={height}
-                />
-                <canvas
-                    ref={this.tipCanvasRef}
                     width={width}
                     height={height}
                 />
