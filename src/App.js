@@ -45,6 +45,9 @@ class Pinball extends Component {
         this.bgCanvasContext.clearRect(0, 0, width, height);
         this.fadeFlashLayer = this.fadeFlashLayer.bind(this)
         window.requestAnimationFrame(this.fadeFlashLayer)
+        this.bgCanvasContext.fillStyle = 'black'
+        this.bgCanvasContext.fillRect(0,0, width, height)
+        this.bgCanvasContext.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
     }
 
     fadeFlashLayer() {
@@ -110,7 +113,8 @@ class Pinball extends Component {
         // clear when score is 0
         if (score === 0) {
             flashCtx.clearRect(0, 0, width, height)
-            bgCtx.clearRect(0, 0, width, height)
+            bgCtx.fillStyle = 'black'
+            bgCtx.fillRect(0,0, width, height)
             ctx.clearRect(0, 0, width, height)
         }
         flashCtx.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
