@@ -66,6 +66,7 @@ class Pinball extends Component {
         let prevScore = this.state.prevScore
         const pointsPerMultiplier = this.props.pointsPerMultiplier
         const flashCtx = this.flashCanvasContext
+        const bgCtx = this.bgCanvasContext
         if (score === prevScore) return
         if (score === 0) {
             prevScore = 0
@@ -96,7 +97,6 @@ class Pinball extends Component {
             console.log('divide')
             flashCtx.fillRect(0, 0, width, height)
             ctx.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
-            const bgCtx = this.bgCanvasContext
             bgCtx.drawImage(this.canvasContext.canvas, 0, 0)
             bgCtx.fillStyle = 'rgba(0, 0, 0, 0.85)'
             bgCtx.fillRect(0, 0, width, height)
@@ -110,12 +110,13 @@ class Pinball extends Component {
         // clear when score is 0
         if (score === 0) {
             flashCtx.clearRect(0, 0, width, height)
-            ctx.fillStyle = 'black'
-            ctx.fillRect(0,0, width, height)
-        } else {
-            flashCtx.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
-            ctx.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
+            bgCtx.clearRect(0, 0, width, height)
+            ctx.clearRect(0, 0, width, height)
         }
+        flashCtx.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
+        bgCtx.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
+        ctx.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
+
 
         // multiplier tick over
         //const prevMultiplier = Math.floor(this.state.prevScore / this.props.pointsPerMultiplier)
