@@ -17,6 +17,7 @@ const POLLING_FPS = 60;
 const NUMBER_IMGS = [
     number0, number1, number2, number3, number4, number5, number6, number7,
     number8, number9]
+const OVERHANG = 0.15
 
 
 function degreesToRadians(degrees) {
@@ -75,10 +76,8 @@ class Pinball extends Component {
             prevScore = 0
         }
         const angleOffset = 42
-        const prevDegrees = ((((prevScore % pointsPerMultiplier) / pointsPerMultiplier) * 360) - 0.15) + angleOffset
-        const prevAngle = degreesToRadians(prevDegrees)
+        const prevDegrees = ((((prevScore % pointsPerMultiplier) / pointsPerMultiplier) * 360) - OVERHANG) + angleOffset
         const degrees = (((score % pointsPerMultiplier) / pointsPerMultiplier) * 360) + angleOffset
-        const angle = degreesToRadians(degrees)
         const degreesDiff = ((score - prevScore) / pointsPerMultiplier) * 360
         const ctx = this.canvasContext
         //let hue = (this.state.updateNumber * 36) % 360
@@ -96,17 +95,17 @@ class Pinball extends Component {
         const a = degrees - angleOffset
         const b = prevDegrees - angleOffset
         if(a < b) {
-            this.drawWedge(degreesToRadians(angleOffset), prevAngle)
+            this.drawWedge(angleOffset, prevDegrees)
             console.log('divide')
             flashCtx.fillRect(0, 0, width, height)
             ctx.clearRect(this.props.borderSize, this.props.borderSize, this.props.gameWidth, this.props.gameHeight)
             bgCtx.drawImage(this.canvasContext.canvas, 0, 0)
-            bgCtx.fillStyle = 'rgba(0, 0, 0, 0.85)'
+            bgCtx.fillStyle = 'rgba(0, 0, 0, 0.75)'
             bgCtx.fillRect(0, 0, width, height)
             this.canvasContext.clearRect(0, 0, width, height)
-            this.drawWedge(angle, degreesToRadians(angleOffset))
+            this.drawWedge(degrees, angleOffset)
         } else {
-            this.drawWedge(angle, prevAngle)
+            this.drawWedge(degrees, prevDegrees)
         }
 
 
@@ -133,7 +132,9 @@ class Pinball extends Component {
         })
     }
 
-    drawWedge(angle, prevAngle) {
+    drawWedgePart(angle, prevAngle) {
+        angle = degreesToRadians(angle)
+        prevAngle = degreesToRadians(prevAngle)
         const width = this.props.gameWidth + (this.props.borderSize * 2)
         const height = this.props.gameHeight + (this.props.borderSize * 2)
         const ctx = this.canvasContext
@@ -161,6 +162,16 @@ class Pinball extends Component {
             (height / 2) + (Math.sin(prevAngle) * 400))
         flashCtx.closePath()
         flashCtx.fill()
+    }
+
+    drawWedge(angle, prevAngle) {
+        let angleRange = angle - prevAngle
+        while(angleRange > 0) {
+            const amount = Math.min(angleRange, 45)
+            this.drawWedgePart(prevAngle + amount, prevAngle - OVERHANG)
+            angleRange -= amount
+            prevAngle += amount
+        }
     }
 
     render() {
