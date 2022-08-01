@@ -279,7 +279,7 @@ async function getPinballScore(emuPort) {
 class App extends Component {
     constructor(props) {
         super(props)
-        this.state = { score: 0, table: null, pointsPerMultiplier: null }
+        this.state = { score: 0, table: null, pointsPerMultiplier: null, visible: false}
         this.emuPort = null
         this.scoreRefresher = this.scoreRefresher.bind(this)
         this.scoreRefresherTimout = null
@@ -291,8 +291,16 @@ class App extends Component {
             if (this.emuPort === null) this.emuPort = await getEmuPort()
             score = await getPinballScore(this.emuPort)
             console.log(score);
+            if(isNaN(score)) {
+                this.setState({visible: false})
+                this.scoreRefresherTimout = setTimeout(this.scoreRefresher, 500)
+                return
+            }
         } catch (e) {
             console.error(e);
+            this.setState({visible: false})
+            this.scoreRefresherTimout = setTimeout(this.scoreRefresher, 500)
+            return
         }
         if (score !== null && score !== this.state.score) {
             // score = 0 means game restarted
@@ -303,10 +311,11 @@ class App extends Component {
                 this.setState({
                     score: score,
                     table: table,
-                    pointsPerMultiplier: pointsPerMultiplier
+                    pointsPerMultiplier: pointsPerMultiplier,
+                    visible: true
                 })
             } else {
-                this.setState({ score: score })
+                this.setState({ score: score, visible: true })
             }
         }
         const finishedAt = (new Date()).getTime()
@@ -326,7 +335,7 @@ class App extends Component {
     render() {
         let pinball = null
         const scale = 1
-        if (this.state.table !== null) {
+        if (this.state.table !== null && this.state.visible) {
             pinball = <Pinball
                 key={'pinball'}
                 score={this.state.score}
