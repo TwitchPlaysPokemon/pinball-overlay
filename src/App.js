@@ -268,8 +268,8 @@ async function getPinballMultipliers() {
 }
 
 async function getPinballScore(emuPort) {
-    const url = `/emu/${emuPort}/WRAM/ReadU32LE/146A`
-    //const url = `http://localhost:${emuPort}/WRAM/ReadU32LE/146A`
+    const url = `/emu/${emuPort}/WRAM/ReadByteRange/146D/1/146C/1/146B/1/146A/1/1469/1/1468/1`
+    //const url = `http://localhost:${emuPort}/WRAM/ReadByteRange/146D/1/146C/1/146B/1/146A/1/1469/1/1468/1`
     const response = await get(url);
     const text = await response.text();
     return parseInt(text + '0');
